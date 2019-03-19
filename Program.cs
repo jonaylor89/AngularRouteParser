@@ -56,13 +56,14 @@ namespace MapRoutes
             string rootBase = root.Split('\\')[root.Split('\\').Length - 1];
             List<Route> routes = new List<Route>();
 
+            // Populate list with routes
             ParseModules(root, rootBase, routes);
 
+            // Filter out unneeded routes
             routes.RemoveAll(ele => filterList.Contains(ele.Path));
 
-            foreach (Route r in routes) {
-                AngularRouteToCSharp(r);
-            }
+            // Convert routes to regex
+            routes.ForEach(ele => AngularRouteToCSharp(ele));
 
             return routes;
         }
