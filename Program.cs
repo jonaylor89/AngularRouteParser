@@ -58,7 +58,26 @@ namespace MapRoutes
 
             parseModules(root, rootBase, routes);
 
+            foreach (Route r in routes) {
+                angularRouteToCSharp(r);
+            }
+
             return routes;
+        }
+
+        public static void angularRouteToCSharp(Route r) {
+
+           string[] endPoint = r.Path.Split("/");
+
+           for (int i = 0; i < endPoint.Length; i++) {
+               if (endPoint[i].StartsWith(":")) {
+
+                   // Angular routing variable to C# Regex for easier pattern matching
+                   endPoint[i] = @"[a-zA-z1-9\_]+$";
+               }
+           }
+
+           r.Path = string.Join("/", endPoint);
         }
         public static List<int> AllIndexesOf(string str, string value) {
             if (String.IsNullOrEmpty(value)) {
