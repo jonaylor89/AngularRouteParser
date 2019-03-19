@@ -39,35 +39,35 @@ namespace MapRoutes
 
             string root = args[0];
             
-            List<Route> fe_routes = parseProject(root);
+            List<Route> fe_routes = ParseProject(root);
 
             foreach (Route r in fe_routes) {
                 Console.WriteLine($"[DEBUG] path found --> {r.Path}");
             }
 
-            writeCacheFile(fe_routes, root);
+            WriteCacheFile(fe_routes, root);
 
             Console.WriteLine("[INFO] \x1b[32mcomplete!\x1b[m");
 
         }
 
-        public static List<Route> parseProject(string root) {
+        public static List<Route> ParseProject(string root) {
 
             string rootBase = root.Split('\\')[root.Split('\\').Length - 1];
             List<Route> routes = new List<Route>();
 
-            parseModules(root, rootBase, routes);
+            ParseModules(root, rootBase, routes);
 
             routes.RemoveAll(ele => filterList.Contains(ele.Path));
 
             foreach (Route r in routes) {
-                angularRouteToCSharp(r);
+                AngularRouteToCSharp(r);
             }
 
             return routes;
         }
 
-        public static void angularRouteToCSharp(Route r) {
+        public static void AngularRouteToCSharp(Route r) {
 
            string[] endPoint = r.Path.Split("/");
 
@@ -103,7 +103,7 @@ namespace MapRoutes
         //     Console.WriteLine($"[DEBUG] Skipping component: {currentError}");
         // }
 
-        static void parseRoutingFile(string file, List<Route> routes) {
+        static void ParseRoutingFile(string file, List<Route> routes) {
 
             if (file.Contains("node_modules")) {
                 return;
@@ -248,7 +248,7 @@ namespace MapRoutes
             }
         }
 
-        static void parseModules(string parent, string basename, List<Route> routes) {
+        static void ParseModules(string parent, string basename, List<Route> routes) {
             // Grab all of the routing files
 
             IEnumerable<string> files = null;
@@ -271,14 +271,14 @@ namespace MapRoutes
                Console.WriteLine($"[DEBUG] parsing {f}");
 
 
-               parseRoutingFile(f, routes);
+               ParseRoutingFile(f, routes);
             });
 
             Console.WriteLine("[INFO] \x1b[32mparsing complete\x1b[m");
  
         }
 
-        static void writeCacheFile(List<Route> routes, string root) {
+        static void WriteCacheFile(List<Route> routes, string root) {
             using (StreamWriter file = new StreamWriter($"{root}\\paths.json")) {
 
                 string output = JsonConvert.SerializeObject(routes, Formatting.Indented);
