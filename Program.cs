@@ -72,6 +72,7 @@ namespace MapRoutes
 
            string[] endPoint = r.Path.Split("/");
 
+            // If the route begins with a `:` then it is a variable
            for (int i = 0; i < endPoint.Length; i++) {
                if (endPoint[i].StartsWith(":")) {
 
@@ -106,13 +107,14 @@ namespace MapRoutes
 
         static void ParseRoutingFile(string file, List<Route> routes) {
 
+            // Because node
             if (file.Contains("node_modules")) {
                 return;
             }
 
             string fileString = String.Join("\n", File.ReadAllLines(file));
-            /* Find `: Routes` */
 
+            /* Find `: Routes` */
             int offset = fileString.IndexOf(": Routes");
 
             if (offset == -1) {
@@ -121,7 +123,6 @@ namespace MapRoutes
             }
 
             /* Move to first "[" */
-
             StringBuilder fakeJsonStringB = new StringBuilder();
 
             for (int i = offset; i < fileString.Length; i++) {
@@ -225,18 +226,68 @@ namespace MapRoutes
                     continue;
                 }
 
-                string matchPathValue = "false";
+                StringBuilder pathMatchValue = new StringBuilder();
 
                 foreach (int matchIndex in pathMatchIndicies) {
+                    
                     if (matchIndex < index) {
+
+                        // `path` and `pathMatch` are in the same object
                         if (fakeJsonString.Substring(matchIndex, index - matchIndex).IndexOf('}') == -1) {
-                            // `path` and `pathMatch` are in the same object
-                            matchPathValue = "true";
+
+                             // Start pointer at the index for `pathMatch`
+                            curIndex = matchIndex;
+
+                            // Move to the start of the value
+                            while (fakeJsonString[curIndex] != ':') {
+                                curIndex++;
+                            }
+
+                            curIndex++;
+
+                            // Grab the rest of the `path` Value
+                            while (fakeJsonString[curIndex] != ',' && fakeJsonString[curIndex] != '}' && curIndex < fakeJsonString.Length) {
+                                pathMatchValue.Append(fakeJsonString[curIndex]);
+                                curIndex++;
+                            }
+
+                            // Clean things up before making it a route
+                            if (pathMatchValue.ToString().Trim(new char[]{' ', '\''}) == "") {
+                                continue;
+                            }
+
+                            // Break out of loop because you can't have 2 pathMatches
+                            break;
+
                         }
-                    } else {
+                    }  else if (matchIndex > index) {
+
+                        // `path` and `pathMatch` are in the same object
                         if (fakeJsonString.Substring(index, matchIndex - index).IndexOf('}') == -1) {
-                            // `path` and `pathMatch` are in the same object
-                            matchPathValue = "true";
+
+                             // Start pointer at the index for `pathMatch`
+                            curIndex = matchIndex;
+
+                            // Move to the start of the value
+                            while (fakeJsonString[curIndex] != ':') {
+                                curIndex++;
+                            }
+
+                            curIndex++;
+
+                            // Grab the rest of the `path` Value
+                            while (fakeJsonString[curIndex] != ',' && fakeJsonString[curIndex] != '}' && curIndex < fakeJsonString.Length) {
+                                pathMatchValue.Append(fakeJsonString[curIndex]);
+                                curIndex++;
+                            }
+
+                            // Clean things up before making it a route
+                            if (pathMatchValue.ToString().Trim(new char[]{' ', '\''}) == "") {
+                                continue;
+                            }
+
+                            // Break out of loop because you can't have 2 pathMatches
+                            break;
                         }
                     }
                 }
@@ -244,7 +295,7 @@ namespace MapRoutes
                 // Make a new route and add it to the list of routes
                 tempRoute = new Route();
                 tempRoute.Path = pathValue.ToString().Trim(new char[]{' ', '\''});
-                tempRoute.PathMatch = matchPathValue;
+                tempRoute.PathMatch = pathMatchValue.ToString().Trim(new char[]{' ', '\''});
                 routes.Add(tempRoute);
             }
         }
