@@ -58,6 +58,8 @@ namespace MapRoutes
 
             parseModules(root, rootBase, routes);
 
+            routes.RemoveAll(ele => filterList.Contains(ele.Path));
+
             foreach (Route r in routes) {
                 angularRouteToCSharp(r);
             }
