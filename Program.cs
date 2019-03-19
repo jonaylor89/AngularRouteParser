@@ -33,28 +33,32 @@ namespace MapRoutes
         {
 
             if (args.Length < 1) {
-                Console.WriteLine("[ERROR] the root and root base are required");
+                Console.WriteLine("[ERROR] the project path is required");
                 Environment.Exit(1);
             } 
 
             string root = args[0];
-            string rootBase = args[0].Split('\\')[args[0].Split('\\').Length - 1];
+            
+            List<Route> fe_routes = parseProject(root);
 
-            List<Route> fe_routes = new List<Route>();
-
-            parseModules(root, rootBase, fe_routes);
-
-            fe_routes.RemoveAll(ele => filterList.Contains(ele.Path));
-
-            Console.WriteLine($"[INFO] \x1b[95m{fe_routes.Count()} paths found\x1b[m");
             foreach (Route r in fe_routes) {
                 Console.WriteLine($"[DEBUG] path found --> {r.Path}");
             }
 
-            writeCacheFile(fe_routes);
+            writeCacheFile(fe_routes, root);
 
             Console.WriteLine("[INFO] \x1b[32mcomplete!\x1b[m");
 
+        }
+
+        public static List<Route> parseProject(string root) {
+
+            string rootBase = root.Split('\\')[root.Split('\\').Length - 1];
+            List<Route> routes = new List<Route>();
+
+            parseModules(root, rootBase, routes);
+
+            return routes;
         }
         public static List<int> AllIndexesOf(string str, string value) {
             if (String.IsNullOrEmpty(value)) {
@@ -253,18 +257,12 @@ namespace MapRoutes
  
         }
 
-        static void analyeRoutes(Route route) {
+        static void writeCacheFile(List<Route> routes, string root) {
+            using (StreamWriter file = new StreamWriter($"{root}\\paths.json")) {
 
-            
-            
-        }
+                string output = JsonConvert.SerializeObject(routes, Formatting.Indented);
 
-        static void writeCacheFile(List<Route> routes) {
-            using (StreamWriter file = new StreamWriter(@"C:\DEV\MapRoutes\PathCache.txt")) {
-
-                foreach (Route r in routes) {
-                    file.WriteLine($"{r.Path} + {r.PathMatch}");
-                }
+                file.WriteLine(output);
 
             }
         }
