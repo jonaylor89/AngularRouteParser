@@ -33,7 +33,7 @@ namespace MapRoutes
         {
 
             if (args.Length < 1) {
-                Console.WriteLine("[ERROR] the project path is required");
+                Console.WriteLine("[ERROR] the project path is required as an argument");
                 Environment.Exit(1);
             } 
 
