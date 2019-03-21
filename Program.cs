@@ -158,7 +158,8 @@ namespace MapRoutes
             char curChar;
             int counter = 1; // We already have one bracket opened
 
-            for (int i = offset+1; i < fileString.Length; i++) {
+            for (int i = offset+1; i < fileString.Length; i++) 
+            {
 
                 curChar = fileString[i];
 
@@ -316,7 +317,8 @@ namespace MapRoutes
             // Grab all of the routing files
 
             IEnumerable<string> files = null;
-            try {
+            try 
+            {
                 files = Directory.EnumerateFiles(parent, "*-routing.module.ts", SearchOption.AllDirectories);
             } catch (DirectoryNotFoundException) {
                 Console.WriteLine($"[ERROR] The directory `{parent}` is not found");
