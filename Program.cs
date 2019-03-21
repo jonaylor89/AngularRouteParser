@@ -15,13 +15,16 @@ namespace MapRoutes
     class Program
     {
 
-        public class Route {
+        public class Route 
+        {
             [JsonProperty(PropertyName = "path")]
             public string Path { get; set; }
 
             [JsonProperty(PropertyName = "pathMatch")]
             public string PathMatch { get; set; }
         }
+
+        static bool debug = false;
 
         static List<string> filterList = new List<string>(new string[]{
                                             "PageNotFound", 
@@ -32,17 +35,27 @@ namespace MapRoutes
         static void Main(string[] args)
         {
 
-            if (args.Length < 1) {
+            if (args.Length < 1) 
+            {
                 Console.WriteLine("[ERROR] the project path is required as an argument");
                 Environment.Exit(1);
             } 
 
             string root = args[0];
+
+            if (args.Length == 2 && args[1] == "-d") 
+            {
+                debug = true;
+            }
             
             List<Route> fe_routes = ParseProject(root);
 
-            foreach (Route r in fe_routes) {
-                Console.WriteLine($"[DEBUG] path found --> {r.Path}");
+            if (debug) 
+            {
+                foreach (Route r in fe_routes) 
+                {
+                    Console.WriteLine($"[DEBUG] path found --> {r.Path}");
+                }
             }
 
             WriteCacheFile(fe_routes, root);
@@ -51,7 +64,8 @@ namespace MapRoutes
 
         }
 
-        public static List<Route> ParseProject(string root) {
+        public static List<Route> ParseProject(string root) 
+        {
 
             string rootBase = root.Split('\\')[root.Split('\\').Length - 1];
             List<Route> routes = new List<Route>();
@@ -68,13 +82,16 @@ namespace MapRoutes
             return routes;
         }
 
-        public static void AngularRouteToCSharp(Route r) {
+        public static void AngularRouteToCSharp(Route r) 
+        {
 
            string[] endPoint = r.Path.Split("/");
 
             // If the route begins with a `:` then it is a variable
-           for (int i = 0; i < endPoint.Length; i++) {
-               if (endPoint[i].StartsWith(":")) {
+           for (int i = 0; i < endPoint.Length; i++) 
+           {
+               if (endPoint[i].StartsWith(":")) 
+               {
 
                    // Angular routing variable to C# Regex for easier pattern matching
                    endPoint[i] = @"[a-zA-z1-9\_]+$";
@@ -83,15 +100,19 @@ namespace MapRoutes
 
            r.Path = string.Join("/", endPoint);
         }
-        public static List<int> AllIndexesOf(string str, string value) {
-            if (String.IsNullOrEmpty(value)) {
+        public static List<int> AllIndexesOf(string str, string value) 
+        {
+            if (String.IsNullOrEmpty(value)) 
+            {
                 throw new ArgumentException("the string to find may not be empty", "value");
             }
 
             List<int> indexes = new List<int>();
-            for (int index = 0;; index += value.Length) {
+            for (int index = 0;; index += value.Length) 
+            {
                 index = str.IndexOf(value, index);
-                if (index == -1) {
+                if (index == -1) 
+                {
                     return indexes;
                 }
 
@@ -99,16 +120,12 @@ namespace MapRoutes
             }
         }
 
-        // static void HandleDeserializationError(object sender, Newtonsoft.Json.Serialization.ErrorEventArgs errorArgs) {
-        //     var currentError = errorArgs.ErrorContext.Error.Message;
-        //     errorArgs.ErrorContext.Handled = true;
-        //     Console.WriteLine($"[DEBUG] Skipping component: {currentError}");
-        // }
-
-        static void ParseRoutingFile(string file, List<Route> routes) {
+        static void ParseRoutingFile(string file, List<Route> routes) 
+        {
 
             // Because node
-            if (file.Contains("node_modules")) {
+            if (file.Contains("node_modules")) 
+            {
                 return;
             }
 
@@ -117,7 +134,8 @@ namespace MapRoutes
             /* Find `: Routes` */
             int offset = fileString.IndexOf(": Routes");
 
-            if (offset == -1) {
+            if (offset == -1) 
+            {
                 Console.Write($"[WARNING] `Routes` type annotation could not be found for {file}");
                 return;
             }
@@ -125,8 +143,10 @@ namespace MapRoutes
             /* Move to first "[" */
             StringBuilder fakeJsonStringB = new StringBuilder();
 
-            for (int i = offset; i < fileString.Length; i++) {
-                if (fileString[i] == '[') {
+            for (int i = offset; i < fileString.Length; i++) 
+            {
+                if (fileString[i] == '[') 
+                {
                     fakeJsonStringB.Append('[');
                     offset = i;
                     break;
@@ -146,14 +166,17 @@ namespace MapRoutes
                 fakeJsonStringB.Append(curChar);
 
                 // Trivial way to see how many brackets we have open 
-                if (curChar == '[') {
+                if (curChar == '[') 
+                {
                     counter++;
-                } else if (curChar == ']') {
+                } else if (curChar == ']') 
+                {
                     counter--;
                 }
 
                 // Are all brackets closed
-                if (counter == 0) {
+                if (counter == 0) 
+                {
                     break;
                 }
                 
@@ -164,33 +187,6 @@ namespace MapRoutes
 
             /*  Convert JSON string to List  */
 
-            /* Hopefully C# has something like javascript jsonify whereby some attributes can be ignored !! Easy way !! */
-
-            /* JAVASCRIPT IS AWFUL AND TERRIBLE */
-            // List<Route> jsonArray;
-            // try {
-            //     jsonArray = JsonConvert.DeserializeObject<List<Route>>(jsonString, new JsonSerializerSettings {
-            //         Error = HandleDeserializationError
-            //     });
-            // } catch (Exception e) {
-            //     Console.WriteLine(e);
-            //     Console.WriteLine($"[INFO] routes could not be parsed in {file} which looks like \n{jsonString}");
-            //     return;
-            // }
-
-            // if (jsonArray is null) {
-            //     Console.WriteLine($"[WARNING] jsonArray is null for {file}");
-            //     Console.WriteLine($"[INFO] failed json looks like so: {jsonString}");
-            //     return;
-            // }
-            
-            // foreach (Route result in jsonArray) {
-            //     routes.Add(result);
-            // }
-
-
-            /* If that isn't available then things like have to be done manually (i.e. Find path and fullPath attributes and string parse the values out) !! Hard way !! */
-
             // Get list of indicies where `pathMatch` is in the routing file
             List<int> pathMatchIndicies = AllIndexesOf(fakeJsonString, "pathMatch");
 
@@ -200,7 +196,8 @@ namespace MapRoutes
             int curIndex;
             Route tempRoute;
             StringBuilder pathValue = new StringBuilder();
-            foreach (int index in indicies) {
+            foreach (int index in indicies) 
+            {
 
                 // Start pointer at the index for `path`
                 curIndex = index;
@@ -209,50 +206,59 @@ namespace MapRoutes
                 pathValue.Clear();
 
                 // Move to the start of the value
-                while (fakeJsonString[curIndex] != ':') {
+                while (fakeJsonString[curIndex] != ':') 
+                {
                     curIndex++;
                 }
 
                 curIndex++;
 
                 // Grab the rest of the `path` Value
-                while (fakeJsonString[curIndex] != ',' && fakeJsonString[curIndex] != '}' && curIndex < fakeJsonString.Length) {
+                while (fakeJsonString[curIndex] != ',' && fakeJsonString[curIndex] != '}' && curIndex < fakeJsonString.Length) 
+                {
                     pathValue.Append(fakeJsonString[curIndex]);
                     curIndex++;
                 }
 
                 // Clean things up before making it a route
-                if (pathValue.ToString().Trim(new char[]{' ', '\''}) == "") {
+                if (pathValue.ToString().Trim(new char[]{' ', '\''}) == "") 
+                {
                     continue;
                 }
 
                 StringBuilder pathMatchValue = new StringBuilder();
 
-                foreach (int matchIndex in pathMatchIndicies) {
+                foreach (int matchIndex in pathMatchIndicies) 
+                {
                     
-                    if (matchIndex < index) {
+                    if (matchIndex < index) 
+                    {
 
                         // `path` and `pathMatch` are in the same object
-                        if (fakeJsonString.Substring(matchIndex, index - matchIndex).IndexOf('}') == -1) {
+                        if (fakeJsonString.Substring(matchIndex, index - matchIndex).IndexOf('}') == -1) 
+                        {
 
                              // Start pointer at the index for `pathMatch`
                             curIndex = matchIndex;
 
                             // Move to the start of the value
-                            while (fakeJsonString[curIndex] != ':') {
+                            while (fakeJsonString[curIndex] != ':') 
+                            {
                                 curIndex++;
                             }
 
                             curIndex++;
 
                             // Grab the rest of the `path` Value
-                            while (fakeJsonString[curIndex] != ',' && fakeJsonString[curIndex] != '}' && curIndex < fakeJsonString.Length) {
+                            while (fakeJsonString[curIndex] != ',' && fakeJsonString[curIndex] != '}' && curIndex < fakeJsonString.Length)
+                            {
                                 pathMatchValue.Append(fakeJsonString[curIndex]);
                                 curIndex++;
                             }
 
                             // Clean things up before making it a route
-                            if (pathMatchValue.ToString().Trim(new char[]{' ', '\''}) == "") {
+                            if (pathMatchValue.ToString().Trim(new char[]{' ', '\''}) == "") 
+                            {
                                 continue;
                             }
 
@@ -260,29 +266,34 @@ namespace MapRoutes
                             break;
 
                         }
-                    }  else if (matchIndex > index) {
+                    }  else if (matchIndex > index) 
+                    {
 
                         // `path` and `pathMatch` are in the same object
-                        if (fakeJsonString.Substring(index, matchIndex - index).IndexOf('}') == -1) {
+                        if (fakeJsonString.Substring(index, matchIndex - index).IndexOf('}') == -1) 
+                        {
 
                              // Start pointer at the index for `pathMatch`
                             curIndex = matchIndex;
 
                             // Move to the start of the value
-                            while (fakeJsonString[curIndex] != ':') {
+                            while (fakeJsonString[curIndex] != ':') 
+                            {
                                 curIndex++;
                             }
 
                             curIndex++;
 
                             // Grab the rest of the `path` Value
-                            while (fakeJsonString[curIndex] != ',' && fakeJsonString[curIndex] != '}' && curIndex < fakeJsonString.Length) {
+                            while (fakeJsonString[curIndex] != ',' && fakeJsonString[curIndex] != '}' && curIndex < fakeJsonString.Length) 
+                            {
                                 pathMatchValue.Append(fakeJsonString[curIndex]);
                                 curIndex++;
                             }
 
                             // Clean things up before making it a route
-                            if (pathMatchValue.ToString().Trim(new char[]{' ', '\''}) == "") {
+                            if (pathMatchValue.ToString().Trim(new char[]{' ', '\''}) == "") 
+                            {
                                 continue;
                             }
 
@@ -300,7 +311,8 @@ namespace MapRoutes
             }
         }
 
-        static void ParseModules(string parent, string basename, List<Route> routes) {
+        static void ParseModules(string parent, string basename, List<Route> routes) 
+        {
             // Grab all of the routing files
 
             IEnumerable<string> files = null;
@@ -316,11 +328,15 @@ namespace MapRoutes
             // Parse the routing files (Concurrently in this case)
             Parallel.ForEach (files, (f) => {
 
-                if (f.Contains("node_modules")) {
+                if (f.Contains("node_modules"))
+                {
                     return;
                 }
 
-               Console.WriteLine($"[DEBUG] parsing {f}");
+                if (debug) 
+                {
+                    Console.WriteLine($"[DEBUG] parsing {f}");
+                }
 
 
                ParseRoutingFile(f, routes);
@@ -330,8 +346,10 @@ namespace MapRoutes
  
         }
 
-        static void WriteCacheFile(List<Route> routes, string root) {
-            using (StreamWriter file = new StreamWriter($"{root}\\paths.json")) {
+        static void WriteCacheFile(List<Route> routes, string root) 
+        {
+            using (StreamWriter file = new StreamWriter($"{root}\\paths.json")) 
+            {
 
                 string output = JsonConvert.SerializeObject(routes, Formatting.Indented);
 
